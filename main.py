@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 from telegram import Bot
-from datetime import datetime
+from telegram.constants import ParseMode
 
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
@@ -41,7 +41,7 @@ def save_chart(df, signal):
     return filename
 
 def send_signal_to_telegram(signal, chart_path):
-    bot.send_message(chat_id=CHAT_ID, text=f"Crypto Signal:\n{signal}")
+    bot.send_message(chat_id=CHAT_ID, text=f"Crypto Signal:\n{signal}", parse_mode=ParseMode.HTML)
     with open(chart_path, 'rb') as chart:
         bot.send_photo(chat_id=CHAT_ID, photo=chart)
 
