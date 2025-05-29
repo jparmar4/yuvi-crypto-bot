@@ -9,11 +9,7 @@ from telegram import Bot
 from telegram.constants import ParseMode
 import asyncio
 import time
-<<<<<<< HEAD
 from datetime import datetime, timezone
-=======
-from datetime import datetime
->>>>>>> eb117c7b8007f678691137f8726a0acf9a782974
 import csv
 
 TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -22,13 +18,8 @@ bot = Bot(token=TOKEN)
 
 # ==== CONFIG ====
 COINS = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'XRPUSDT']
-<<<<<<< HEAD
 INTERVALS = ['1h']
 COOLDOWNS = {'1h': 3600}
-=======
-INTERVALS = ['1h', '15m']
-COOLDOWNS = {'1h': 3600, '15m': 900}  # seconds
->>>>>>> eb117c7b8007f678691137f8726a0acf9a782974
 LOG_FILE = "signal_log.csv"
 
 def fetch_data(symbol, interval, limit=100):
@@ -44,10 +35,7 @@ def fetch_data(symbol, interval, limit=100):
             'qav', 'num_trades', 'taker_base_vol', 'taker_quote_vol', 'ignore'
         ])
         df['close'] = df['close'].astype(float)
-<<<<<<< HEAD
         df['volume'] = df['volume'].astype(float)
-=======
->>>>>>> eb117c7b8007f678691137f8726a0acf9a782974
         df['open_time'] = pd.to_datetime(df['open_time'], unit='ms')
         return df
     except Exception as e:
@@ -88,7 +76,6 @@ def macd_crossover(macd_line, signal_line):
         return "bearish"
     else:
         return None
-<<<<<<< HEAD
 
 def ma_crossover(ma_short, ma_long, prev_ma_short, prev_ma_long):
     if prev_ma_short < prev_ma_long and ma_short > ma_long:
@@ -132,8 +119,6 @@ def calculate_fibonacci_levels(swing_low, swing_high, trend):
         for r in fib_ratios:
             levels[f"Fib {int(r*100)}%"] = swing_high - (swing_high - swing_low) * r
     return levels
-=======
->>>>>>> eb117c7b8007f678691137f8726a0acf9a782974
 
 def generate_signal(df):
     if df is None or len(df) < 35:
@@ -169,21 +154,13 @@ def generate_signal(df):
 def get_last_signal(symbol, interval):
     fname = f"last_signal_{symbol}_{interval}.txt"
     if os.path.exists(fname):
-<<<<<<< HEAD
         with open(fname, 'r', encoding='utf-8') as f:
-=======
-        with open(fname, 'r') as f:
->>>>>>> eb117c7b8007f678691137f8726a0acf9a782974
             return f.read().strip()
     return None
 
 def set_last_signal(symbol, interval, signal):
     fname = f"last_signal_{symbol}_{interval}.txt"
-<<<<<<< HEAD
     with open(fname, 'w', encoding='utf-8') as f:
-=======
-    with open(fname, 'w') as f:
->>>>>>> eb117c7b8007f678691137f8726a0acf9a782974
         f.write(signal)
 
 def get_last_alert_time(symbol, interval):
@@ -199,20 +176,12 @@ def set_last_alert_time(symbol, interval, timestamp):
         f.write(str(timestamp))
 
 def save_chart(df, signal, symbol, interval, rsi, macd_line, signal_line, bb_upper, bb_lower):
-<<<<<<< HEAD
-    # Remove emoji from chart titles to avoid matplotlib warnings
     clean_signal = signal.replace("🚀", "").replace("📉", "").strip()
-=======
->>>>>>> eb117c7b8007f678691137f8726a0acf9a782974
     plt.figure(figsize=(14, 8))
     plt.plot(df['open_time'], df['close'], label='Close Price', color='blue')
     plt.plot(df['open_time'], bb_upper, label='BB Upper', color='green', linestyle='--')
     plt.plot(df['open_time'], bb_lower, label='BB Lower', color='red', linestyle='--')
-<<<<<<< HEAD
     plt.title(f"{symbol} ({interval}) - Signal: {clean_signal} - RSI: {rsi:.2f}")
-=======
-    plt.title(f"{symbol} ({interval}) - Signal: {signal} - RSI: {rsi:.2f}")
->>>>>>> eb117c7b8007f678691137f8726a0acf9a782974
     plt.xlabel("Time")
     plt.ylabel("Price (USDT)")
     plt.grid(True)
@@ -228,11 +197,7 @@ def save_chart(df, signal, symbol, interval, rsi, macd_line, signal_line, bb_upp
 
 def log_signal(symbol, interval, signal, rsi, macd_cross, price):
     log_data = {
-<<<<<<< HEAD
         "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
-=======
-        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
->>>>>>> eb117c7b8007f678691137f8726a0acf9a782974
         "symbol": symbol,
         "interval": interval,
         "signal": signal,
@@ -241,11 +206,7 @@ def log_signal(symbol, interval, signal, rsi, macd_cross, price):
         "price": round(price, 2) if price is not None else ""
     }
     file_exists = os.path.isfile(LOG_FILE)
-<<<<<<< HEAD
     with open(LOG_FILE, "a", newline='', encoding='utf-8') as f:
-=======
-    with open(LOG_FILE, "a", newline='') as f:
->>>>>>> eb117c7b8007f678691137f8726a0acf9a782974
         writer = csv.DictWriter(f, fieldnames=log_data.keys())
         if not file_exists:
             writer.writeheader()
@@ -270,7 +231,6 @@ async def main():
             if data is None:
                 print(f"{symbol} ({interval}): Not enough data.")
                 continue
-<<<<<<< HEAD
 
             prev_ma_short = data['df']['close'].rolling(window=7).mean().iloc[-2]
             prev_ma_long = data['df']['close'].rolling(window=25).mean().iloc[-2]
@@ -346,50 +306,34 @@ async def main():
                 f"Volume: <b>{float(data['df']['volume'].iloc[-1]):,.2f}</b>\n"
             )
 
-=======
-            # Only alert if RSI is overbought/oversold or MACD crossover
-            if data['rsi_state'] is None and data['macd_cross'] is None:
-                print(f"{symbol} ({interval}): No RSI or MACD crossover alert.")
-                continue
-            last_signal = get_last_signal(symbol, interval)
-            significant_event = False
-            alert_msg = ""
-            if last_signal != data['trend_signal']:
-                significant_event = True
-                set_last_signal(symbol, interval, data['trend_signal'])
-                alert_msg += f"Trend changed! New trend: <b>{data['trend_signal']}</b>\n"
-            if data['macd_cross']:
-                significant_event = True
-                alert_msg += f"MACD Crossover: <b>{data['macd_cross'].capitalize()} Crossover</b>\n"
-            if not significant_event:
-                print(f"{symbol} ({interval}): No new significant signal.")
-                continue
->>>>>>> eb117c7b8007f678691137f8726a0acf9a782974
             chart_path = save_chart(
                 data['df'], data['trend_signal'], symbol, interval, data['rsi'],
                 data['macd_line'], data['signal_line'],
                 data['df']['close'].rolling(window=20).mean() + 2*data['df']['close'].rolling(window=20).std(),
                 data['df']['close'].rolling(window=20).mean() - 2*data['df']['close'].rolling(window=20).std()
             )
-<<<<<<< HEAD
 
-=======
-            msg = (
-                f"<b>{symbol} ({interval}) Alert</b>\n"
-                f"{alert_msg}"
-                f"RSI (14): <b>{data['rsi']:.2f}</b> ({data['rsi_state'] if data['rsi_state'] else 'Neutral'})\n"
-                f"Short MA (7): <b>{data['ma_short']:.2f}</b>\n"
-                f"Long MA (25): <b>{data['ma_long']:.2f}</b>\n"
-                f"MACD: <b>{data['macd_now']:.2f}</b>, MACD Signal: <b>{data['macd_signal_now']:.2f}</b>\n"
-                f"Bollinger Bands: <b>{data['bb_upper_now']:.2f} / {data['bb_mid_now']:.2f} / {data['bb_lower_now']:.2f}</b>\n"
-            )
->>>>>>> eb117c7b8007f678691137f8726a0acf9a782974
             await send_signal_to_telegram(msg, chart_path=chart_path)
             set_last_alert_time(symbol, interval, now)
             log_signal(
                 symbol, interval, data['trend_signal'], data['rsi'], data['macd_cross'], data['df']['close'].iloc[-1]
             )
             print(f"{symbol} ({interval}): Alert sent and logged.")
+
+# ---- DUMMY WEB SERVER FOR CLOUD RUN ----
+import threading
+from flask import Flask
+
+def run_dummy_server():
+    app = Flask('dummy')
+    @app.route("/")
+    def index():
+        return "Bot running!", 200
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
+
+# Start the dummy web server in a background thread
+threading.Thread(target=run_dummy_server, daemon=True).start()
 
 if __name__ == "__main__":
     asyncio.run(main())
