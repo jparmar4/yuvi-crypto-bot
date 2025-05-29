@@ -11,14 +11,18 @@ CHAT_ID = os.getenv("CHAT_ID")
 
 bot = Bot(token=TOKEN)
 
-def fetch_data(symbol='BTCUSDT', interval='15m', limit=100):
+def fetch_data(symbol='BTCUSDT', interval='1h', limit=100):
     url = f'https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}'
     try:
         response = requests.get(url)
         data = response.json()
+        print("Fetched data rows:", len(data))
         if not data or len(data) < 25:
             return None
-        df = pd.DataFrame(data, columns=['open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'qav', 'num_trades', 'taker_base_vol', 'taker_quote_vol', 'ignore'])
+        df = pd.DataFrame(data, columns=[
+            'open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time',
+            'qav', 'num_trades', 'taker_base_vol', 'taker_quote_vol', 'ignore'
+        ])
         df['close'] = df['close'].astype(float)
         df['open_time'] = pd.to_datetime(df['open_time'], unit='ms')
         return df
@@ -38,9 +42,9 @@ def generate_signal(df):
         return "SHORT 📉", ma_short, ma_long
 
 def save_chart(df, signal):
-    plt.figure(figsize=(10,5))
+    plt.figure(figsize=(10, 5))
     plt.plot(df['open_time'], df['close'], label='Close Price')
-    plt.title(f"BTC/USDT - Signal: {signal}")
+    plt.title(f"BTC/USDT (1h) - Signal: {signal}")
     plt.xlabel("Time")
     plt.ylabel("Price (USDT)")
     plt.grid(True)
@@ -63,7 +67,10 @@ async def main():
         await bot.send_message(chat_id=CHAT_ID, text="No signal: Not enough data to calculate moving averages.")
     else:
         chart_path = save_chart(df, signal)
-        await send_signal_to_telegram(signal=f"{signal}\nShort MA: {short_ma:.2f}\nLong MA: {long_ma:.2f}", chart_path=chart_path)
+        await send_signal_to_telegram(
+            signal=f"{signal}\nShort MA: {short_ma:.2f}\nLong MA: {long_ma:.2f}",
+            chart_path=chart_path
+        )
 
 if __name__ == "__main__":
     asyncio.run(main())
